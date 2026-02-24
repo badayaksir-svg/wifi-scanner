@@ -139,8 +139,8 @@ def bruteforce_demo():
         print("❌ Password not in demo wordlist")
 
     elif mode == "b":
-        length = int(input("Enter length to bruteforce (4-6 digits max recommended): "))
-        if length > 6:
+        length = int(input("Enter length to bruteforce (20 digits max recommended): "))
+        if length > 20:
             print("Too long for demo (would take hours)")
             return
         chars = "0123456789"

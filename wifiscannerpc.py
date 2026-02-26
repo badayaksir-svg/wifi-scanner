@@ -14,7 +14,7 @@ import queue
 from itertools import product
 import ctypes
 
-# Fix Scapy cache permission error on Windows
+
 import scapy
 scapy.config.conf.cache = False
 

@@ -91,3 +91,88 @@ def capture_thread(iface, target_bssid, target_ssid):
             result_queue.put(("status", f"✅ Saved to {OUTPUT_PCAP}"))
     except Exception as e:
         result_queue.put(("status", f"Error: {e}"))
+
+def dictionary_attack_thread(ssid):
+    passwords = []
+    if os.path.exists(ROCKYOU_PATH):
+        print(f"[+] Loading rockyou.txt...")
+        try:
+            with open(ROCKYOU_PATH, "r", encoding="utf-8", errors="ignore") as f:
+                for i, line in enumerate(f):
+                    pwd = line.strip()
+                    if pwd: passwords.append(pwd)
+                    if i >= MAX_ROCKYOU_LINES - 1:
+                        print(f"Limited to first {MAX_ROCKYOU_LINES:,}")
+                        break
+        except Exception as e:
+            print(f"[-] Error reading rockyou: {e}")
+            passwords = ["123456", "password", "admin"]
+    else:
+        passwords = ["123456", "password", "admin", "letmein", "qwerty"]
+        print(f"[+] Using demo list ({len(passwords)})")
+
+    total = len(passwords)
+    result_queue.put(("status", f"Starting attack on {ssid} with {total:,} passwords..."))
+
+    found = [False]
+    tried_count = [0]
+
+    def worker(chunk):
+        nonlocal found
+        for pwd in chunk:
+            if stop_event.is_set() or found[0]:
+                return
+            tried_count[0] += 1
+            result_queue.put(("trying", f"Trying ({tried_count[0]}/{total}): {pwd}"))
+            time.sleep(0.005)
+
+            if pwd.lower() in ["123456", "password", "admin", "letmein", "qwerty"]:
+                result_queue.put(("cracked", pwd))
+                found[0] = True
+                return
+
+            if tried_count[0] % 5000 == 0:
+                result_queue.put(("status", f"Progress: {tried_count[0]:,} / {total:,}"))
+
+    chunk_size = max(1, total // MAX_WORKERS)
+    threads = []
+    for i in range(0, total, chunk_size):
+        chunk = passwords[i:i + chunk_size]
+        t = threading.Thread(target=worker, args=(chunk,))
+        t.daemon = True
+        t.start()
+        threads.append(t)
+
+    for t in threads:
+        t.join()
+
+    if not found[0]:
+        result_queue.put(("status", "Dictionary attack finished - password not found"))
+    else:
+        result_queue.put(("status", "Attack stopped - password found"))
+
+def print_menu():
+    print("\n" + "="*60)
+    print("      Wi-Fi Tool – rockyou Dictionary Attack")
+    print("="*60)
+    print("1. Scan Wi-Fi")
+    print("2. Capture Handshake (Linux only)")
+    print("3. Dictionary Attack")
+    print("4. Stop current operation")
+    print("5. Exit")
+    print("="*60)
+
+def process_queue():
+    while not result_queue.empty():
+        typ, data = result_queue.get()
+        if typ == "status":
+            print(f"[+] {data}")
+        elif typ == "found":
+            print(data)
+        elif typ == "trying":
+            print(f"\r{data:<70}", end="", flush=True)
+        elif typ == "cracked":
+            print(f"\n\n🎉 RECOVERED (demo): {data}")
+            print("   → For educational purposes only!")
+        elif typ == "networks":
+            print("\nScan complete!")

@@ -10,7 +10,7 @@ import sys
 import os
 import platform
 import threading
-import queue
+import queuegit
 from itertools import product
 import ctypes
 

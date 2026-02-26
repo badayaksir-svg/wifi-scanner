@@ -34,3 +34,20 @@ MAX_ROCKYOU_LINES = 100_000
 
 stop_event   = threading.Event()
 result_queue = queue.Queue()
+
+# ─── Functions ────────────────────────────────────────────────
+
+def is_admin():
+    if platform.system() == "Windows":
+        return ctypes.windll.shell32.IsUserAnAdmin() != 0
+    return os.geteuid() == 0
+
+def scan_wifi_windows():
+    print("\n🔍 Scanning nearby Wi-Fi (netsh)...")
+    try:
+        out = subprocess.check_output(["netsh", "wlan", "show", "networks", "mode=bssid"],
+                                      text=True, stderr=subprocess.STDOUT)
+        print(out)
+    except Exception as e:
+        print(f"❌ {e}")
+

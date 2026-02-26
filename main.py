@@ -176,3 +176,50 @@ def process_queue():
             print("   → For educational purposes only!")
         elif typ == "networks":
             print("\nScan complete!")
+
+def main():
+    print("Wi-Fi Tool")
+    print(f"Platform: {platform.system()} | Admin/root: {is_admin()}\n")
+
+    while True:
+        print_menu()
+        choice = input("\nChoice (1-5): ").strip()
+
+        stop_event.clear()
+
+        if choice == "1":
+            if platform.system() == "Windows":
+                threading.Thread(target=scan_wifi_windows, daemon=True).start()
+            else:
+                threading.Thread(target=scan_thread, args=(INTERFACE,), daemon=True).start()
+
+        elif choice == "2":
+            if platform.system() != "Linux":
+                print("❌ Handshake capture requires Linux + monitor mode")
+                continue
+            bssid = input("Target BSSID: ").strip()
+            ssid  = input("Target SSID:  ").strip()
+            threading.Thread(target=capture_thread, args=(INTERFACE, bssid, ssid), daemon=True).start()
+
+        elif choice == "3":
+            ssid = input("Target SSID: ").strip()
+            threading.Thread(target=dictionary_attack_thread, args=(ssid,), daemon=True).start()
+
+        elif choice == "4":
+            stop_event.set()
+            print("🛑 Stopping current operation...")
+            time.sleep(1.0)
+
+        elif choice == "5":
+            print("Goodbye!")
+            break
+
+        process_queue()
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        stop_event.set()
+        print("\nStopped by user.")
+

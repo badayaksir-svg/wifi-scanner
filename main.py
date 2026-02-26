@@ -50,4 +50,44 @@ def scan_wifi_windows():
         print(out)
     except Exception as e:
         print(f"❌ {e}")
+def scan_thread(iface):
+    networks = {}
+    def handler(pkt):
+        if stop_event.is_set(): return True
+        if pkt.haslayer(Dot11Beacon):
+            bssid = pkt[Dot11].addr3.upper()
+            if bssid in networks: return
+            ssid = pkt[Dot11Beacon].info.decode('utf-8', errors='ignore') or "<hidden>"
+            signal = getattr(pkt[RadioTap], "dBm_AntSignal", "N/A") if pkt.haslayer(RadioTap) else "N/A"
+            networks[bssid] = {"ssid": ssid, "signal": signal}
+            result_queue.put(("found", f"Found → {ssid:<30} | {bssid} | Sig:{signal}"))
 
+    try:
+        result_queue.put(("status", f"Scanning on {iface}..."))
+        sniff(iface=iface, prn=handler, timeout=SCAN_DURATION, store=0)
+    finally:
+        result_queue.put(("networks", networks))
+        result_queue.put(("status", "Scan finished"))
+
+def capture_thread(iface, target_bssid, target_ssid):
+    packets = []
+    count = [0]
+    def handler(pkt):
+        if stop_event.is_set(): return True
+        if pkt.haslayer(EAPOL):
+            count[0] += 1
+            packets.append(pkt)
+            result_queue.put(("status", f"EAPOL packet #{count[0]} captured"))
+            if count[0] >= 4:
+                result_queue.put(("status", "✅ Full 4-way handshake captured!"))
+                return True
+        return False
+
+    try:
+        result_queue.put(("status", f"Capturing handshake for {target_ssid}..."))
+        sniff(iface=iface, prn=handler, timeout=CAPTURE_DURATION, store=0)
+        if packets:
+            wrpcap(OUTPUT_PCAP, packets)
+            result_queue.put(("status", f"✅ Saved to {OUTPUT_PCAP}"))
+    except Exception as e:
+        result_queue.put(("status", f"Error: {e}"))

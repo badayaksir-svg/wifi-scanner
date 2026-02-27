@@ -186,4 +186,32 @@ def worker(chunk):
     else:
         log_status(f"DEMO PASSWORD FOUND: {passwords[tried[0]-1]}")
 
+# ─── GUI ─────────────────────────────────────────────────────────────
 
+
+class WiFiToolGUI:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Wi-Fi Tool – GUI")
+        self.root.geometry("860x640")
+        self.root.minsize(720, 520)
+
+
+        # Log area
+        self.log_area = scrolledtext.ScrolledText(
+            root, wrap=tk.WORD, font=("Consolas", 10), height=24, bg="#fdfdfd"
+        )
+        self.log_area.pack(padx=12, pady=10, fill=tk.BOTH, expand=True)
+
+
+        # Button frame
+        btn_frame = ttk.Frame(root)
+        btn_frame.pack(pady=10, padx=12, fill=tk.X)
+
+
+        ttk.Button(btn_frame, text="Scan Wi-Fi", command=self.start_scan).pack(side=tk.LEFT, padx=6)
+        ttk.Button(btn_frame, text="Capture Handshake", command=self.start_capture).pack(side=tk.LEFT, padx=6)
+        ttk.Button(btn_frame, text="Start Attack", command=self.start_attack).pack(side=tk.LEFT, padx=6)
+        ttk.Button(btn_frame, text="STOP", command=self.stop_all,
+                   style="Stop.TButton").pack(side=tk.LEFT, padx=6)
+        ttk.Button(btn_frame, text="Clear Log", command=self.clear_log).pack(side=tk.RIGHT, padx=6)

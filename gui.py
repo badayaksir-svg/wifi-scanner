@@ -12,7 +12,6 @@ import subprocess
 import ctypes
 
 
-
 # Scapy setup
 try:
     from scapy.config import conf
@@ -149,7 +148,8 @@ def dictionary_attack_thread(ssid):
     found = [False]
     tried = [0]
 
-def worker(chunk):
+
+    def worker(chunk):
         for pwd in chunk:
             if stop_event.is_set() or found[0]:
                 return
@@ -186,6 +186,7 @@ def worker(chunk):
     else:
         log_status(f"DEMO PASSWORD FOUND: {passwords[tried[0]-1]}")
 
+
 # ─── GUI ─────────────────────────────────────────────────────────────
 
 
@@ -215,3 +216,94 @@ class WiFiToolGUI:
         ttk.Button(btn_frame, text="STOP", command=self.stop_all,
                    style="Stop.TButton").pack(side=tk.LEFT, padx=6)
         ttk.Button(btn_frame, text="Clear Log", command=self.clear_log).pack(side=tk.RIGHT, padx=6)
+
+
+        # Status bar
+        self.status_var = tk.StringVar(value="Ready | " + platform.system())
+        ttk.Label(root, textvariable=self.status_var, relief=tk.SUNKEN, anchor=tk.W).pack(side=tk.BOTTOM, fill=tk.X)
+
+
+        ttk.Style().configure("Stop.TButton", foreground="white", background="#d32f2f", padding=6)
+
+
+        # Start queue checker
+        self.root.after(200, self.update_from_queue)
+
+
+        self.log("GUI initialized. Press a button to start.")
+
+
+    def log(self, message):
+        self.log_area.insert(tk.END, message + "\n")
+        self.log_area.see(tk.END)
+
+
+    def clear_log(self):
+        self.log_area.delete("1.0", tk.END)
+        self.log("Log cleared.")
+
+
+    def update_from_queue(self):
+        while not result_queue.empty():
+            typ, data = result_queue.get()
+            if typ == "status":
+                self.log(f"[+] {data}")
+                self.status_var.set(data[:90] + "..." if len(data) > 90 else data)
+            elif typ == "found":
+                self.log(f"→ {data}")
+            elif typ == "trying":
+                self.log(data)
+            elif typ == "cracked":
+                self.log(f"\n🎉 PASSWORD FOUND (demo): {data}\n")
+                messagebox.showinfo("Demo Result", f"Password recovered:\n{data}")
+        self.root.after(150, self.update_from_queue)
+
+
+    def start_scan(self):
+        stop_event.clear()
+        self.log("Starting Wi-Fi scan...")
+        if platform.system() == "Windows":
+            threading.Thread(target=scan_wifi_windows, daemon=True).start()
+        else:
+            threading.Thread(target=scan_thread, args=(INTERFACE,), daemon=True).start()
+
+
+    def start_capture(self):
+        if platform.system() != "Linux":
+            messagebox.showwarning("Warning", "Capture only works on Linux with monitor mode enabled.")
+            return
+
+
+        bssid = simpledialog.askstring("Capture Handshake", "Target BSSID:")
+        if not bssid:
+            return
+        ssid = simpledialog.askstring("Capture Handshake", "Target SSID:")
+        if not ssid:
+            return
+
+
+        stop_event.clear()
+        self.log("Starting handshake capture...")
+        threading.Thread(target=capture_thread, args=(INTERFACE, bssid, ssid), daemon=True).start()
+
+
+    def start_attack(self):
+        ssid = simpledialog.askstring("Dictionary Attack", "Target SSID:")
+        if not ssid:
+            return
+
+
+        stop_event.clear()
+        self.log("Starting dictionary attack...")
+        threading.Thread(target=dictionary_attack_thread, args=(ssid,), daemon=True).start()
+
+
+    def stop_all(self):
+        stop_event.set()
+        self.log("🛑 STOP command sent... waiting for threads to finish.")
+
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = WiFiToolGUI(root)
+    root.mainloop()

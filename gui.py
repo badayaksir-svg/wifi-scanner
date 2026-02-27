@@ -149,3 +149,41 @@ def dictionary_attack_thread(ssid):
     found = [False]
     tried = [0]
 
+def worker(chunk):
+        for pwd in chunk:
+            if stop_event.is_set() or found[0]:
+                return
+            tried[0] += 1
+            result_queue.put(("trying", f"Trying ({tried[0]:6d}/{total}): {pwd}"))
+            time.sleep(0.004)
+
+
+            if pwd.lower() in ["123456", "password", "admin", "letmein", "qwerty"]:
+                result_queue.put(("cracked", pwd))
+                found[0] = True
+                return
+
+
+            if tried[0] % 2000 == 0:
+                log_status(f"Progress: {tried[0]:,} / {total:,}")
+
+
+    chunk_size = max(1, total // MAX_WORKERS)
+    threads = []
+    for i in range(0, total, chunk_size):
+        t = threading.Thread(target=worker, args=(passwords[i:i+chunk_size],))
+        t.daemon = True
+        t.start()
+        threads.append(t)
+
+
+    for t in threads:
+        t.join()
+
+
+    if not found[0]:
+        log_status("Attack finished – password not found")
+    else:
+        log_status(f"DEMO PASSWORD FOUND: {passwords[tried[0]-1]}")
+
+

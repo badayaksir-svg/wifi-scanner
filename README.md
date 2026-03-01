@@ -149,6 +149,51 @@ Key settings at the top of both `main.py` and `gui.py`:
 
 ---
 
+## ⚖️ Legal Policies
+
+### Legal Use Only
+This tool must only be used on networks and devices that you **own** or have been given **explicit written permission** to test. Using this tool without authorisation is a criminal offence in most countries.
+
+### United Kingdom
+- **Computer Misuse Act 1990** — Unauthorised access to computer systems carries a penalty of up to **10 years imprisonment**. Sections 1, 2, and 3 directly apply to unauthorised network access and interception.
+- **Investigatory Powers Act 2016** — Unlawful interception of communications is a serious criminal offence.
+- **Data Protection Act 2018 / UK GDPR** — Capturing network traffic containing personal data without consent violates data protection law and can result in significant fines.
+
+### European Union
+- **Directive on Attacks Against Information Systems (2013/40/EU)** — Criminalises unauthorised access, interception, and interference with information systems across all EU member states.
+
+### United States
+- **Computer Fraud and Abuse Act (CFAA)** — Unauthorised access to computer networks is a federal crime carrying penalties of up to **20 years imprisonment** for repeat offences.
+- **Electronic Communications Privacy Act (ECPA)** — Unlawful interception of electronic communications is prohibited.
+
+### International
+Most countries have equivalent cybercrime legislation. Ignorance of the law is not a valid defence. Always verify local laws before using this tool.
+
+---
+
+## 🌍 How This Tool Can Affect Others
+
+Understanding the potential impact of this tool is essential for responsible use.
+
+### Privacy
+- Packet sniffing can capture **unencrypted network traffic** from other users on the same network, exposing personal data, login credentials, and browsing activity without their knowledge.
+- Even capturing handshake packets involves intercepting data transmitted by devices belonging to other people.
+
+### Network Disruption
+- Running this tool on a shared or public network can **degrade performance** for other users by generating excessive traffic or interfering with normal network operations.
+
+### Reputational & Academic Consequences
+- Misuse of this tool, even unintentionally, can result in **disciplinary action** from your college or university, including expulsion.
+- It can also result in a **permanent criminal record**, which affects future employment, particularly in IT and cybersecurity careers.
+
+### Ethical Responsibility
+- Security tools like this exist to help professionals **protect** systems, not exploit them. Ethical use means always obtaining permission, documenting your actions, and reporting vulnerabilities responsibly.
+- If used in a lab or controlled environment for learning, ensure all participants are aware and have consented.
+
+> **In short:** Always ask yourself — *"Do I have permission to do this?"* If the answer is anything other than a clear yes, do not proceed.
+
+---
+
 ## 📚 Concepts Demonstrated
 
 This project covers the following programming concepts relevant to **ST4017CMD**:

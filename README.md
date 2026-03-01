@@ -74,13 +74,55 @@ Follow the on-screen menu:
 | `4` | Stop current operation |
 | `5` | Exit |
 
+**Step-by-step:**
+
+1. Open your terminal and navigate to the project folder
+2. Run `python main.py`
+3. Choose option `1` to scan — nearby networks will appear with their SSID, BSSID and signal strength
+4. On Linux, choose option `2`, enter the target BSSID and SSID to begin capturing a handshake — wait until 4 EAPOL packets are captured
+5. Choose option `3`, enter the SSID to run the dictionary attack against the saved `handshake.pcap`
+6. Use option `4` at any time to stop a running operation
+7. Use option `5` to exit cleanly
+
 ### GUI Version
 
 ```bash
 python gui.py
 ```
 
-Use the buttons in the interface to **Scan**, **Capture**, **Attack**, or **Stop** operations. Logs are displayed in real-time in the output panel.
+> ⚠️ Always close the window using the **✕ button**. Do **not** press Ctrl+C while the GUI is open as this will force-quit the application.
+
+**Step-by-step:**
+
+1. Run `python gui.py` — a window will open
+2. Click **Scan Wi-Fi** to discover nearby networks — results appear in the log panel in real time
+3. On Linux, click **Capture Handshake**, enter the BSSID and SSID when prompted — the tool listens for EAPOL packets and saves them to `handshake.pcap`
+4. Click **Start Attack**, enter the target SSID — `aircrack-ng` will run against the captured handshake using `rockyou.txt`
+5. Click **Stop** at any time to cancel the current operation
+6. Click **Clear Log** to clear the output panel
+
+---
+
+## ⚠️ Limitations
+
+### Platform Limitations
+- **Handshake capture** only works on **Linux** — it requires a wireless adapter that supports monitor mode, which is not available on standard Windows Wi-Fi drivers
+- **Dictionary attack** requires `aircrack-ng` to be installed — this is a Linux tool and is not natively available on Windows without additional setup (e.g. WSL)
+- On **Windows**, only the **Wi-Fi Scan** feature is fully functional, using the built-in `netsh` command
+
+### Hardware Limitations
+- A **monitor mode-capable wireless adapter** is required for packet sniffing on Linux — most built-in laptop Wi-Fi cards do not support this
+- Signal strength readings (`dBm`) may not be available on all adapters or drivers
+
+### Software Limitations
+- The tool relies on **Scapy** for packet sniffing, which requires **administrator/root privileges** to capture raw packets
+- The dictionary attack is only as effective as the wordlist provided — passwords not present in `rockyou.txt` will not be found
+- `rockyou.txt` is **not included** in this repository due to its large file size (~130MB) — it must be sourced separately
+- The capture timeout is fixed at 90 seconds — if no handshake occurs in that window, the capture stops with no result
+
+### Security Limitations
+- The tool does not support **WPA3** networks — only WPA/WPA2 handshake-based attacks are implemented
+- No de-authentication packet injection is implemented — the tool passively waits for a handshake rather than forcing one
 
 ---
 
